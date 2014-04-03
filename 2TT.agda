@@ -5,6 +5,8 @@ open import Level
 {- I will be honest that I'm wondering if including the universe levels will actually be what I really /want/ to do, but on the other hand it seems like following Escardo et al.'s approach closely is probably the smartest thing I can do.
 
   Also, fundamentally, for the evaluation of things I don't know what I'll do. I might try to use that trick for making higher paths compute in Agda in order to get real equalities or maybe I'll just end up formalizing the canonicity proof from the paper. 
+
+  This also might all fail horribly but at least it'll be a cute exercise, doncha think?
   -}
 
 data Cxt : Level -> Set
@@ -20,6 +22,11 @@ data Cxt where
 
 data Type where
   _[_]  : {i j k : Level} {Γ : Cxt i} {Δ : Cxt j} → Type k Γ → Subst Δ Γ → Type k Δ
+  Sigma : {i j k : Level} {Γ : Cxt i} (A : Type j Γ) -> Type k (Γ · A) -> Type (j ⊔ k) Γ
+  Pi : {i j k : Level} {Γ : Cxt i} (A : Type j Γ) -> Type k (Γ · A) -> Type (j ⊔ k) Γ
+  U : {i : Level} {Γ : Cxt i} (j : Level) -> Type (suc j) Γ
+  El : {i j : Level} {Γ : Cxt i} -> Term Γ (U j) -> Type j Γ
+  `2 : {i : Level} -> {Γ : Cxt i} -> Type i Γ
 
 data Subst where
   I : {i : Level} {Γ : Cxt i} -> Subst Γ Γ  
@@ -38,6 +45,8 @@ data CxtTrans where
   cResp : {i j k : Level} {Γ : Cxt i} {Δ : Cxt j} {Ω : Cxt k} -> {θ θ' : Subst Γ Δ} -> {ψ ψ' : Subst Ω Γ} -> CxtTrans θ θ' -> CxtTrans ψ ψ' -> CxtTrans (θ ∘ ψ) (θ' ∘ ψ')
 {- need to add the cons case!! -}
 
-data Term where
-data TermTrans where
+data Term where  
+  
 
+data TermTrans where
+  tRefl : {i j : Level} {Γ : Cxt i} {A : Type j Γ} -> (M : Term Γ A) -> TermTrans M M
