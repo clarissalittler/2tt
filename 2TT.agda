@@ -46,7 +46,12 @@ data CxtTrans where
 {- need to add the cons case!! -}
 
 data Term where  
-  
+  map : {i j k : Level} {Γ : Cxt i} {Δ : Cxt j} {θ θ' : Subst Γ Δ} {A : Type k Δ} -> (δ : CxtTrans θ θ') -> (M : Term Γ (A [ θ ])) -> Term Γ (A [ θ' ])
+  _⟨_⟩ : {i j k : Level} {Γ : Cxt i} {Δ : Cxt j} {A : Type k Γ} -> Term Γ A -> (σ : Subst Δ Γ) -> Term Δ (A [ σ ])
 
 data TermTrans where
   tRefl : {i j : Level} {Γ : Cxt i} {A : Type j Γ} -> (M : Term Γ A) -> TermTrans M M
+  tInv : {i j : Level} {Γ : Cxt i} {A : Type j Γ} -> {M M' : Term Γ A} -> TermTrans M M' -> TermTrans M' M
+  tComp : {i j : Level} {Γ : Cxt i} {A : Type j Γ} -> {M M' M'' : Term Γ A} -> TermTrans M' M'' -> TermTrans M M' -> TermTrans M M''
+  tResp : {i j k : Level} {Γ : Cxt i} {Δ : Cxt j } {A : Type k Δ} {θ θ' : Subst Γ Δ} -> {M N : Term Δ A}
+        -> (α : TermTrans M N) -> (δ : CxtTrans θ θ') -> TermTrans (map δ (M ⟨ θ ⟩ )) (N ⟨ θ' ⟩ )
