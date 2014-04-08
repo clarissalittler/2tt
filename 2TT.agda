@@ -27,6 +27,7 @@ data Type where
   U : {i : Level} {Γ : Cxt i} (j : Level) -> Type (suc j) Γ
   El : {i j : Level} {Γ : Cxt i} -> Term Γ (U j) -> Type j Γ
   `2 : {i : Level} -> {Γ : Cxt i} -> Type i Γ
+  Id : {i j : Level} {Γ : Cxt i} -> (A : Type j Γ) -> (M M' : Term Γ A) -> Type j Γ
 
 data Subst where
   I : {i : Level} {Γ : Cxt i} -> Subst Γ Γ  
@@ -36,18 +37,24 @@ data Subst where
   ₍_,_₎ : {i j k : Level} {Γ : Cxt i} {Δ : Cxt j} {A : Type k Γ} (σ : Subst Δ Γ) -> Term Δ (A [ σ ]) -> Subst Δ (Γ · A)
 
 
+
 {- so we also need the action of contexts transformations on substitutions -}
+
+
+data Term where  
+  map : {i j k : Level} {Γ : Cxt i} {Δ : Cxt j} {θ θ' : Subst Γ Δ} {A : Type k Δ} -> (δ : CxtTrans θ θ') -> (M : Term Γ (A [ θ ])) -> Term Γ (A [ θ' ])
+  _⟨_⟩ : {i j k : Level} {Γ : Cxt i} {Δ : Cxt j} {A : Type k Δ} -> Term Δ A -> (σ : Subst Γ Δ) -> Term Γ (A [ σ ])
+  
 
 data CxtTrans where
   cRefl : {i j : Level} {Γ : Cxt i} {Δ : Cxt j} -> (θ : Subst Γ Δ) -> CxtTrans θ θ 
   cInv : {i j : Level} {Γ : Cxt i} {Δ : Cxt j} -> {θ θ' : Subst Γ Δ} -> CxtTrans θ θ' -> CxtTrans θ' θ
   cComp : {i j : Level} {Γ : Cxt i} {Δ : Cxt j} -> {θ θ' θ'' : Subst Γ Δ} -> CxtTrans θ' θ'' -> CxtTrans θ θ' -> CxtTrans θ θ''
   cResp : {i j k : Level} {Γ : Cxt i} {Δ : Cxt j} {Ω : Cxt k} -> {θ θ' : Subst Γ Δ} -> {ψ ψ' : Subst Ω Γ} -> CxtTrans θ θ' -> CxtTrans ψ ψ' -> CxtTrans (θ ∘ ψ) (θ' ∘ ψ')
-{- need to add the cons case!! -}
+  csResp : {i j k : Level} {Γ : Cxt i} {Δ : Cxt j} {Ω : Cxt k} {ψ ψ' : Subst Ω Γ} -> (θ : Subst Γ Δ) -> (δ : CxtTrans ψ ψ') -> CxtTrans (θ ∘ ψ ) (θ ∘ ψ' )
+  ₍_,_₎ : {i j k : Level} {Γ : Cxt i} {Δ : Cxt j} {A : Type k Δ} {θ θ' : Subst Γ Δ} {M : Term Γ (A [ θ ])} {N : Term Γ (A [ θ' ])} -> (δ : CxtTrans θ θ') -> (α : TermTrans (map δ M) N) -> CxtTrans ₍ θ , M ₎ ₍ θ' , N ₎ 
 
-data Term where  
-  map : {i j k : Level} {Γ : Cxt i} {Δ : Cxt j} {θ θ' : Subst Γ Δ} {A : Type k Δ} -> (δ : CxtTrans θ θ') -> (M : Term Γ (A [ θ ])) -> Term Γ (A [ θ' ])
-  _⟨_⟩ : {i j k : Level} {Γ : Cxt i} {Δ : Cxt j} {A : Type k Γ} -> Term Γ A -> (σ : Subst Δ Γ) -> Term Δ (A [ σ ])
+
 
 data TermTrans where
   tRefl : {i j : Level} {Γ : Cxt i} {A : Type j Γ} -> (M : Term Γ A) -> TermTrans M M
@@ -55,3 +62,4 @@ data TermTrans where
   tComp : {i j : Level} {Γ : Cxt i} {A : Type j Γ} -> {M M' M'' : Term Γ A} -> TermTrans M' M'' -> TermTrans M M' -> TermTrans M M''
   tResp : {i j k : Level} {Γ : Cxt i} {Δ : Cxt j } {A : Type k Δ} {θ θ' : Subst Γ Δ} -> {M N : Term Δ A}
         -> (α : TermTrans M N) -> (δ : CxtTrans θ θ') -> TermTrans (map δ (M ⟨ θ ⟩ )) (N ⟨ θ' ⟩ )
+  _[_] : {i j k : Level} {Γ : Cxt i} {Δ : Cxt j} {A : Type k Δ} {θ θ' : Subst Γ Δ} -> (M : Term Δ A) -> (δ : CxtTrans θ θ') -> TermTrans (map δ (M ⟨ θ ⟩)) (M ⟨ θ' ⟩)
