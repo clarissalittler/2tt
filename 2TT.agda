@@ -40,11 +40,24 @@ data Subst where
 
 {- so we also need the action of contexts transformations on substitutions -}
 
+_⌜_⌝ : {i j k : Level} {Γ : Cxt i} {A : Type j Γ} → 
+       Type k (Γ · A) → Term Γ A → Type k Γ
+
+_⌞_⌟ : {i j k : Level} {Γ : Cxt i} {A : Type j Γ} {B : Type k (Γ · A)} →
+       Term (Γ · A) B → (u : Term Γ A) → Term Γ (B ⌜ u ⌝)
+
+_⌈_⌉ : {i j k l : Level} {Γ : Cxt i} {Δ : Cxt j} {A : Type k Γ} →
+       Type l (Γ · A) → (σ : Subst Δ Γ) → Type l (Δ · (A [ σ ]))
+
+_⌊_⌋ : {i j k l : Level} {Γ : Cxt i} {Δ : Cxt j} {A : Type k Γ} {B : Type l (Γ · A)} →
+       Term (Γ · A) B → (σ : Subst Δ Γ) → Term (Δ · (A [ σ ])) (B ⌈ σ ⌉)
 
 data Term where  
   map : {i j k : Level} {Γ : Cxt i} {Δ : Cxt j} {θ θ' : Subst Γ Δ} {A : Type k Δ} -> (δ : CxtTrans θ θ') -> (M : Term Γ (A [ θ ])) -> Term Γ (A [ θ' ])
   _⟨_⟩ : {i j k : Level} {Γ : Cxt i} {Δ : Cxt j} {A : Type k Δ} -> Term Δ A -> (σ : Subst Γ Δ) -> Term Γ (A [ σ ])
-  
+  `λ : {i j k : Level} {Γ : Cxt i} {A : Type j Γ} {B : Type k (Γ · A)} -> Term (Γ · A) B -> Term Γ (Pi A B)
+  App : {i j k : Level} {Γ : Cxt i} {A : Type j Γ} {B : Type k (Γ · A)} -> Term Γ (Pi A B) -> (M : Term Γ A) -> Term Γ  (B ⌜ M ⌝)
+  q : {i j : Level} {Γ : Cxt i} {A : Type j Γ} -> Term (Γ · A) (A [ p ])
 
 data CxtTrans where
   cRefl : {i j : Level} {Γ : Cxt i} {Δ : Cxt j} -> (θ : Subst Γ Δ) -> CxtTrans θ θ 
@@ -63,3 +76,9 @@ data TermTrans where
   tResp : {i j k : Level} {Γ : Cxt i} {Δ : Cxt j } {A : Type k Δ} {θ θ' : Subst Γ Δ} -> {M N : Term Δ A}
         -> (α : TermTrans M N) -> (δ : CxtTrans θ θ') -> TermTrans (map δ (M ⟨ θ ⟩ )) (N ⟨ θ' ⟩ )
   _[_] : {i j k : Level} {Γ : Cxt i} {Δ : Cxt j} {A : Type k Δ} {θ θ' : Subst Γ Δ} -> (M : Term Δ A) -> (δ : CxtTrans θ θ') -> TermTrans (map δ (M ⟨ θ ⟩)) (M ⟨ θ' ⟩)
+--  `λ : {i j k : Level} {Γ : Cxt i} {A : Type j Γ} {B : Type k (Γ · A)} 
+
+B ⌜ u ⌝ = {!!}
+u ⌞ v ⌟ = {!!} 
+B ⌈ σ ⌉ = {!!} 
+u ⌊ σ ⌋ = {!!}
