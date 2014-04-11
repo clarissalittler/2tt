@@ -36,9 +36,7 @@ data Subst where
   {- this is different than the original theory because it's only projecting down one variable and not arbitrarily many at once, on the other hand that's okay because we can just repeat this operation repeatedly. -}
   ₍_,_₎ : {i j k : Level} {Γ : Cxt i} {Δ : Cxt j} {A : Type k Γ} (σ : Subst Δ Γ) -> Term Δ (A [ σ ]) -> Subst Δ (Γ · A)
 
-
-
-{- so we also need the action of contexts transformations on substitutions -}
+{- rar, okay, in addition to the pieces below as macros I think we also need a '''''''''macro''''''''' for map¹ -}
 
 _⌜_⌝ : {i j k : Level} {Γ : Cxt i} {A : Type j Γ} → 
        Type k (Γ · A) → Term Γ A → Type k Γ
@@ -52,12 +50,15 @@ _⌈_⌉ : {i j k l : Level} {Γ : Cxt i} {Δ : Cxt j} {A : Type k Γ} →
 _⌊_⌋ : {i j k l : Level} {Γ : Cxt i} {Δ : Cxt j} {A : Type k Γ} {B : Type l (Γ · A)} →
        Term (Γ · A) B → (σ : Subst Δ Γ) → Term (Δ · (A [ σ ])) (B ⌈ σ ⌉)
 
+map¹ : {i j k : Level} {Γ : Cxt i} {A : Type j Γ} {B : Type k (Γ · A)} {N₁ N₂ : Term Γ A} -> (α : TermTrans N₁ N₂) -> (M : Term Γ (B ⌜ N₁ ⌝ )) -> Term Γ (B ⌜ N₂ ⌝ ) 
+
 data Term where  
   map : {i j k : Level} {Γ : Cxt i} {Δ : Cxt j} {θ θ' : Subst Γ Δ} {A : Type k Δ} -> (δ : CxtTrans θ θ') -> (M : Term Γ (A [ θ ])) -> Term Γ (A [ θ' ])
   _⟨_⟩ : {i j k : Level} {Γ : Cxt i} {Δ : Cxt j} {A : Type k Δ} -> Term Δ A -> (σ : Subst Γ Δ) -> Term Γ (A [ σ ])
   `λ : {i j k : Level} {Γ : Cxt i} {A : Type j Γ} {B : Type k (Γ · A)} -> Term (Γ · A) B -> Term Γ (Pi A B)
   App : {i j k : Level} {Γ : Cxt i} {A : Type j Γ} {B : Type k (Γ · A)} -> Term Γ (Pi A B) -> (M : Term Γ A) -> Term Γ  (B ⌜ M ⌝)
-  q : {i j : Level} {Γ : Cxt i} {A : Type j Γ} -> Term (Γ · A) (A [ p ])
+  q : {i j : Level} {Γ : Cxt i} {A : Type j Γ} -> Term (Γ · A) (A [ p ]) -- 'sup bro, this is the projection from the last variable in the context...bro
+  bool : {i j : Level} {Γ : Cxt i} -> Term Γ (U j)
 
 data CxtTrans where
   cRefl : {i j : Level} {Γ : Cxt i} {Δ : Cxt j} -> (θ : Subst Γ Δ) -> CxtTrans θ θ 
@@ -67,8 +68,6 @@ data CxtTrans where
   csResp : {i j k : Level} {Γ : Cxt i} {Δ : Cxt j} {Ω : Cxt k} {ψ ψ' : Subst Ω Γ} -> (θ : Subst Γ Δ) -> (δ : CxtTrans ψ ψ') -> CxtTrans (θ ∘ ψ ) (θ ∘ ψ' )
   ₍_,_₎ : {i j k : Level} {Γ : Cxt i} {Δ : Cxt j} {A : Type k Δ} {θ θ' : Subst Γ Δ} {M : Term Γ (A [ θ ])} {N : Term Γ (A [ θ' ])} -> (δ : CxtTrans θ θ') -> (α : TermTrans (map δ M) N) -> CxtTrans ₍ θ , M ₎ ₍ θ' , N ₎ 
 
-
-
 data TermTrans where
   tRefl : {i j : Level} {Γ : Cxt i} {A : Type j Γ} -> (M : Term Γ A) -> TermTrans M M
   tInv : {i j : Level} {Γ : Cxt i} {A : Type j Γ} -> {M M' : Term Γ A} -> TermTrans M M' -> TermTrans M' M
@@ -76,9 +75,12 @@ data TermTrans where
   tResp : {i j k : Level} {Γ : Cxt i} {Δ : Cxt j } {A : Type k Δ} {θ θ' : Subst Γ Δ} -> {M N : Term Δ A}
         -> (α : TermTrans M N) -> (δ : CxtTrans θ θ') -> TermTrans (map δ (M ⟨ θ ⟩ )) (N ⟨ θ' ⟩ )
   _[_] : {i j k : Level} {Γ : Cxt i} {Δ : Cxt j} {A : Type k Δ} {θ θ' : Subst Γ Δ} -> (M : Term Δ A) -> (δ : CxtTrans θ θ') -> TermTrans (map δ (M ⟨ θ ⟩)) (M ⟨ θ' ⟩)
---  `λ : {i j k : Level} {Γ : Cxt i} {A : Type j Γ} {B : Type k (Γ · A)} 
+--  `λ : {i j k : Level} {Γ : Cxt i} {A : Type j Γ} {B : Type k (Γ · A)} {M N : Term (Γ · A) B} -- Having trouble with this one because I'm trying to substitute q into M and N and...I don't see an easy way to do that? It's kinda weird and frustrating that I'm not seeing it.
+  tApp : {i j k : Level} {Γ : Cxt i} {A : Type j Γ} {B : Type k (Γ · A)} {M₁ M₂ : Term Γ (Pi A B)} {N₁ N₂ : Term Γ A} -> (α : TermTrans M₁ M₂) -> (β : TermTrans N₁ N₂) -> TermTrans (map¹ β (App M₁ N₁)) (App M₂ N₂)
 
 B ⌜ u ⌝ = {!!}
 u ⌞ v ⌟ = {!!} 
 B ⌈ σ ⌉ = {!!} 
 u ⌊ σ ⌋ = {!!}
+
+map¹ = {!!}
